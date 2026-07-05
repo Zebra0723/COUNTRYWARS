@@ -1,7 +1,8 @@
 "use client";
 
-import { flagEmoji } from "@/lib/data";
+import { countryCode } from "@/lib/data";
 import { fragility } from "@/lib/ranking";
+import { StarIcon } from "@/components/icons";
 
 const FRAG_CLASS = {
   "Steady": "steady",
@@ -18,8 +19,8 @@ export default function PlayerRow({ player, tour, following, onToggle }) {
         {player.rank}
         <small>{tour}</small>
       </div>
-      <span className="flag" aria-hidden>
-        {flagEmoji(player.country)}
+      <span className="country" aria-label={player.country}>
+        {countryCode(player.country)}
       </span>
       <div className="p-main">
         <div className="p-name">{player.name}</div>
@@ -36,7 +37,7 @@ export default function PlayerRow({ player, tour, following, onToggle }) {
         aria-label={following ? "Unfollow" : "Follow"}
         title={following ? "Unfollow" : "Follow"}
       >
-        {following ? "★" : "☆"}
+        <StarIcon filled={following} />
       </button>
     </div>
   );

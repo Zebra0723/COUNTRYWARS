@@ -4,16 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { PLAYERS, TOURS, TOURNAMENT, findPlayer } from "@/lib/data";
 import PlayerRow from "@/components/PlayerRow";
 import RankingLab from "@/components/RankingLab";
+import { CourtMark, SunIcon, MoonIcon } from "@/components/icons";
 
 const STORAGE_KEY = "deuce.following.v1";
+const THEME_KEY = "deuce.theme";
 
 export default function Home() {
   const [tour, setTour] = useState("ATP");
   const [query, setQuery] = useState("");
   const [following, setFollowing] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const [theme, setTheme] = useState("light");
 
-  // Load follows from localStorage on mount.
+  // Load follows + theme from storage on mount.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -21,6 +24,9 @@ export default function Home() {
     } catch {
       /* ignore */
     }
+    const current =
+      document.documentElement.getAttribute("data-theme") || "light";
+    setTheme(current);
     setHydrated(true);
   }, []);
 
@@ -33,6 +39,17 @@ export default function Home() {
       /* ignore */
     }
   }, [following, hydrated]);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      /* ignore */
+    }
+  }
 
   function toggle(id) {
     setFollowing((prev) =>
@@ -47,7 +64,6 @@ export default function Home() {
     );
   }, [tour, query]);
 
-  // Followed players resolved to full records, sorted by current rank.
   const followed = useMemo(
     () =>
       following
@@ -61,12 +77,25 @@ export default function Home() {
     <>
       <header className="masthead">
         <div className="masthead-inner">
-          <div className="brand">
-            <h1>
-              <span className="ball">●</span> Deuce
-            </h1>
-            <span className="tag">ATP / WTA tour tracker · ranking lab</span>
+          <div className="top-row">
+            <div className="brand">
+              <CourtMark size={54} />
+              <div>
+                <h1>Deuce</h1>
+                <span className="tag">ATP / WTA tracker &amp; ranking lab</span>
+              </div>
+            </div>
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Toggle light and dark mode"
+              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            >
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+              <span>{theme === "dark" ? "Light" : "Dark"}</span>
+            </button>
           </div>
+
           <div className="event-strip">
             <span className="live-dot" aria-hidden />
             <span className="event-name">
@@ -81,15 +110,16 @@ export default function Home() {
       </header>
 
       <main className="wrap">
-        {/* ---------- Ranking Lab (followed players) ---------- */}
         <div className="section-title">
           Your Ranking Lab · {followed.length} following
         </div>
         {followed.length === 0 ? (
           <div className="lab-empty">
-            <div style={{ fontSize: 26, marginBottom: 8 }}>🎾</div>
-            Star players below to track them here. The Lab shows what each result
-            at {TOURNAMENT.name} does to their ranking — live.
+            <CourtMark size={44} />
+            <p>
+              Star players below to track them here. The Lab shows what each
+              result at {TOURNAMENT.name} does to their ranking — live.
+            </p>
           </div>
         ) : (
           <div className="grid two">
@@ -104,7 +134,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* ---------- Browse the field ---------- */}
         <div className="toolbar">
           <div className="toggle">
             {TOURS.map((t) => (
@@ -137,7 +166,9 @@ export default function Home() {
             />
           ))}
           {list.length === 0 && (
-            <div className="lab-empty">No players match “{query}”.</div>
+            <div className="lab-empty">
+              <p>No players match “{query}”.</p>
+            </div>
           )}
         </div>
 
